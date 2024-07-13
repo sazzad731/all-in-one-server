@@ -63,6 +63,26 @@ async function run() {
     });
 
 
+    app.put("/addReview/:id", async(req, res)=>{
+      const id = req.params.id;
+      const data = req.body;
+      const date = new Date();
+      const day = date.getDate();
+      const month = date.getMonth();
+      const year = date.getFullYear();
+      data.creationDate = `${day}/${month + 1}/${year}`
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $push: {
+          review: data,
+        },
+      };
+      const result = await servicesCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    })
+
+
     app.get("/testimonials", async(req, res)=>{
       const cursor = testimonialsCollection.find();
       const result = await cursor.limit(6).toArray();
