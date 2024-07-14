@@ -38,6 +38,7 @@ async function run() {
     const database = client.db("allInOne");
 
     const servicesCollection = database.collection("services");
+    const reviewsCollection = database.collection("reviews");
     const testimonialsCollection = database.collection("testimonials");
 
 
@@ -63,24 +64,25 @@ async function run() {
     });
 
 
-    app.put("/addReview/:id", async(req, res)=>{
-      const id = req.params.id;
-      const data = req.body;
+    // add reviews
+    app.post("/addReview", async(req, res)=>{
+      const document = req.body;
       const date = new Date();
       const day = date.getDate();
       const month = date.getMonth();
       const year = date.getFullYear();
-      data.creationDate = `${day}/${month + 1}/${year}`
-      const filter = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updateDoc = {
-        $push: {
-          review: data,
-        },
-      };
-      const result = await servicesCollection.updateOne(filter, updateDoc, options);
+      document.creationDate = `${day}/${month + 1}/${year}`;
+      const result = await reviewsCollection.insertOne(document);
       res.send(result);
     })
+
+    app.get("/getReview/:id", async(req, res)=>{
+      const serviceId = req.params.id;
+      const query = { serviceId: serviceId };
+      const cursor = reviewsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
 
     app.get("/testimonials", async(req, res)=>{
