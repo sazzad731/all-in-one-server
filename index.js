@@ -85,6 +85,14 @@ async function run() {
     });
 
 
+    app.get("/my-reviews", async(req, res)=>{
+      const query = { email: req.query.email };
+      const cursor = reviewsCollection.find(query);
+      const result = await cursor.toArray()
+      res.send(result)
+    });
+
+
     app.get("/testimonials", async(req, res)=>{
       const cursor = testimonialsCollection.find();
       const result = await cursor.limit(6).toArray();
