@@ -23,8 +23,8 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
 
-    if(client){
-      return {client}
+    if (client) {
+      return { client };
     }
     client = new MongoClient(uri, {
       serverApi: {
@@ -41,31 +41,28 @@ async function run() {
     const reviewsCollection = database.collection("reviews");
     const testimonialsCollection = database.collection("testimonials");
 
-
     // get 3 services
-    app.get("/services3", async(req, res)=>{
+    app.get("/services3", async (req, res) => {
       const cursor = servicesCollection.find();
       const result = await cursor.limit(3).toArray();
       res.send(result);
-    })
+    });
 
-    app.get("/services", async(req, res)=>{
+    app.get("/services", async (req, res) => {
       const cursor = servicesCollection.find();
       const result = await cursor.toArray();
       res.send(result);
-    })
-
-
-    app.get("/service-details/:id", async(req, res)=>{
-      const id = req.params.id
-      const query = { _id: new ObjectId(id) }
-      const result = await servicesCollection.findOne(query);
-      res.send(result)
     });
 
+    app.get("/service-details/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await servicesCollection.findOne(query);
+      res.send(result);
+    });
 
     // add reviews
-    app.post("/addReview", async(req, res)=>{
+    app.post("/addReview", async (req, res) => {
       const document = req.body;
       const date = new Date();
       const day = date.getDate();
@@ -74,9 +71,10 @@ async function run() {
       document.creationDate = `${day}/${month + 1}/${year}`;
       const result = await reviewsCollection.insertOne(document);
       res.send(result);
-    })
+    });
 
-    app.get("/getReview/:id", async(req, res)=>{
+    // Get all reviews for specific service
+    app.get("/getReview/:id", async (req, res) => {
       const serviceId = req.params.id;
       const query = { serviceId: serviceId };
       const cursor = reviewsCollection.find(query);
@@ -84,28 +82,42 @@ async function run() {
       res.send(result);
     });
 
-
-    app.get("/my-reviews", async(req, res)=>{
-      const query = { email: req.query.email };
-      const cursor = reviewsCollection.find(query);
-      const result = await cursor.toArray()
-      res.send(result)
-    });
-
-
-    app.get("/testimonials", async(req, res)=>{
-      const cursor = testimonialsCollection.find();
-      const result = await cursor.limit(6).toArray();
+    // Get single review
+    app.get("/oneReview/:id", async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await reviewsCollection.findOne(query);
       res.send(result);
     })
 
-    app.post("/testimonials", async(req, res)=>{
-      const {load} = req.body;
-      if(load){
+    app.get("/my-reviews", async (req, res) => {
+      const query = { email: req.query.email };
+      const cursor = reviewsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // delete a review
+    app.delete("/my-reviews/:id", async(req, res)=>{
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await reviewsCollection.deleteOne(query)
+      res.send(result);
+    })
+
+    app.get("/testimonials", async (req, res) => {
+      const cursor = testimonialsCollection.find();
+      const result = await cursor.limit(6).toArray();
+      res.send(result);
+    });
+
+    app.post("/testimonials", async (req, res) => {
+      const { load } = req.body;
+      if (load) {
         const cursor = testimonialsCollection.find();
         const result = await cursor.toArray();
         const count = await testimonialsCollection.estimatedDocumentCount();
-        res.send({ result, count })
+        res.send({ result, count });
       }
     });
     // Send a ping to confirm a successful connection
