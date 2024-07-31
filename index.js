@@ -97,6 +97,24 @@ async function run() {
       res.send(result);
     });
 
+    // update a review
+    app.put("/edit-review/:id", async(req, res)=>{
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const option = { upsert: true };
+      const review = req.body;
+      const updatedReview = {
+        $set: {
+          occupation: review.occupation,
+          ratings: review.ratings,
+          reviewTitle: review.reviewTitle,
+          reviewDescription: review.reviewDescription,
+        },
+      };
+      const result = await reviewsCollection.updateOne(filter, updatedReview, option);
+      res.send(result)
+    });
+
     // delete a review
     app.delete("/my-reviews/:id", async(req, res)=>{
       const id = req.params.id;
