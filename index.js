@@ -43,7 +43,11 @@ async function run() {
 
     // get 3 services
     app.get("/services3", async (req, res) => {
-      const cursor = servicesCollection.find();
+      const options = {
+        // Sort returned documents in ascending order by title (A->Z)
+        sort: { Title: 1 }
+      };
+      const cursor = servicesCollection.find({}, options);
       const result = await cursor.limit(3).toArray();
       res.send(result);
     });
@@ -60,6 +64,12 @@ async function run() {
       const result = await servicesCollection.findOne(query);
       res.send(result);
     });
+
+    app.post("/add-service", async(req, res)=>{
+      const service = req.body;
+      const result = await servicesCollection.insertOne(service);
+      res.send(result);
+    })
 
     // add reviews
     app.post("/addReview", async (req, res) => {
