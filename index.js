@@ -109,8 +109,12 @@ async function run() {
     // Get all reviews for specific service
     app.get("/getReview/:id", async (req, res) => {
       const serviceId = req.params.id;
+      const options = {
+        // Sort returned documents in ascending order by title (A->Z)
+        sort: { creationDate: -1 },
+      };
       const query = { serviceId: serviceId };
-      const cursor = reviewsCollection.find(query);
+      const cursor = reviewsCollection.find(query, options);
       const result = await cursor.toArray();
       res.send(result);
     });
