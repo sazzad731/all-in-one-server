@@ -18,6 +18,21 @@ const uri =
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 let client;
 
+function verifyJWT(req, res, next){
+  const authHeader = req.headers.authorization;
+  if(!authHeader){
+    return res.status(401).send({message: "unauthorized access", code: "401"})
+  }
+  const token = authHeader.split(' ')?.[ 1 ]
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
+    if(err){
+      return res.status(401).send({message: "unauthorized access", code: "401"})
+    }
+    req.decoded = decoded;
+    next()
+  })
+}
+
 
 async function run() {
   try {
@@ -40,6 +55,14 @@ async function run() {
     const servicesCollection = database.collection("services");
     const reviewsCollection = database.collection("reviews");
     const testimonialsCollection = database.collection("testimonials");
+
+
+    app.post("/jwt", (req, res)=>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
+      res.send({token})
+    })
+
 
     // get 3 services
     app.get("/services3", async (req, res) => {
@@ -100,11 +123,18 @@ async function run() {
       res.send(result);
     })
 
-    app.get("/my-reviews", async (req, res) => {
-      const query = { email: req.query.email };
-      const cursor = reviewsCollection.find(query);
-      const result = await cursor.toArray();
-      res.send(result);
+    app.get("/my-reviews", verifyJWT, async (req, res) => {
+      const decoded = req.decoded
+      if(decoded.email !== req.query.email){
+        res.status(403).send({message: "unauthorized access", code: "403"})
+      }
+      let query = {};
+      if (req.query.email) {
+        query = { email: req.query.email };
+        const cursor = reviewsCollection.find(query);
+        const result = await cursor.toArray();
+        res.send(result);
+      }
     });
 
     // update a review
@@ -153,7 +183,7 @@ async function run() {
 
     app.get("/", (req, res) => {
       res.send(
-        "Server running successfuly <br/> <br/> Pinged your deployment. You successfully connected to MongoDB!"
+        "Server running successfully <br/> <br/> Pinged your deployment. You successfully connected to MongoDB!"
       );
     });
 
