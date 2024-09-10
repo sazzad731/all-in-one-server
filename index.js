@@ -48,7 +48,7 @@ async function run() {
         deprecationErrors: true,
       },
     });
-    await client.connect();
+    // await client.connect();
 
     const database = client.db("allInOne");
 
@@ -56,19 +56,19 @@ async function run() {
     const reviewsCollection = database.collection("reviews");
     const testimonialsCollection = database.collection("testimonials");
 
-
-    app.post("/jwt", (req, res)=>{
+    app.post("/jwt", (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
-      res.send({token})
-    })
-
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1d",
+      });
+      res.send({ token });
+    });
 
     // get 3 services
     app.get("/services3", async (req, res) => {
       const options = {
         // Sort returned documents in ascending order by title (A->Z)
-        sort: { Title: 1 }
+        sort: { Title: 1 },
       };
       const cursor = servicesCollection.find({}, options);
       const result = await cursor.limit(3).toArray();
@@ -88,11 +88,11 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/add-service", async(req, res)=>{
+    app.post("/add-service", async (req, res) => {
       const service = req.body;
       const result = await servicesCollection.insertOne(service);
       res.send(result);
-    })
+    });
 
     // add reviews
     app.post("/addReview", async (req, res) => {
@@ -120,17 +120,17 @@ async function run() {
     });
 
     // Get single review
-    app.get("/oneReview/:id", async(req, res)=>{
+    app.get("/oneReview/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) };
       const result = await reviewsCollection.findOne(query);
       res.send(result);
-    })
+    });
 
     app.get("/my-reviews", verifyJWT, async (req, res) => {
-      const decoded = req.decoded
-      if(decoded.email !== req.query.email){
-        res.status(403).send({message: "unauthorized access", code: "403"})
+      const decoded = req.decoded;
+      if (decoded.email !== req.query.email) {
+        res.status(403).send({ message: "unauthorized access", code: "403" });
       }
       let query = {};
       if (req.query.email) {
@@ -142,7 +142,7 @@ async function run() {
     });
 
     // update a review
-    app.put("/edit-review/:id", async(req, res)=>{
+    app.put("/edit-review/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const option = { upsert: true };
@@ -155,17 +155,21 @@ async function run() {
           reviewDescription: review.reviewDescription,
         },
       };
-      const result = await reviewsCollection.updateOne(filter, updatedReview, option);
-      res.send(result)
+      const result = await reviewsCollection.updateOne(
+        filter,
+        updatedReview,
+        option
+      );
+      res.send(result);
     });
 
     // delete a review
-    app.delete("/my-reviews/:id", async(req, res)=>{
+    app.delete("/my-reviews/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) }
-      const result = await reviewsCollection.deleteOne(query)
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsCollection.deleteOne(query);
       res.send(result);
-    })
+    });
 
     app.get("/testimonials", async (req, res) => {
       const cursor = testimonialsCollection.find();
@@ -182,8 +186,6 @@ async function run() {
         res.send({ result, count });
       }
     });
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
 
     app.get("/", (req, res) => {
       res.send(
@@ -191,9 +193,12 @@ async function run() {
       );
     });
 
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // Send a ping to confirm a successful connection
+    // await client.db("admin").command({ ping: 1 });
+
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } catch(err) {
     // Ensures that the client will close when you finish/error
     // await client.close();
